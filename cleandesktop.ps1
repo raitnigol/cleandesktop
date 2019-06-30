@@ -1,4 +1,4 @@
-﻿<# 
+﻿<#
 .SYNOPSIS
     Description on how this script works.
 .DESCRIPTION
