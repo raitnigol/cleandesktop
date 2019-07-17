@@ -58,20 +58,19 @@ else {
     }
 
 # find the desktop path
-$DesktopPath = [Environment]::GetFolderPath("Desktop")
-Write-Host "Your desktop path is $DesktopPath"; sleep -s 1
-
-# ask for folder name
-$date = Get-Date -UFormat "%Y.%m.%d-(%H_%M)"
-$folder = Read-Host -Prompt "What do you want the folder name to be?"
-$foldername = $($folder+$date)
+$DesktopPath = [Environment]::GetFolderPath("Desktop"); sleep -s 1
 
 # ask for folder directory
 Write-Host "Where do you want to save the folder?"; Write-Host ""
 Write-Host "[1] Save it on your desktop. (Your current desktop path is $DesktopPath)"
 Write-Host "[2] Specify a destination."; Write-Host ""
 
-$answer = Read-Host -Prompt "Your choice"
+$answer = Read-Host -Prompt "Your choice"; Write-Host ""
+
+# ask for folder name
+$date = Get-Date -UFormat "%Y.%m.%d-(%H_%M)"
+$folder = Read-Host -Prompt "What do you want the folder name to be?"
+$foldername = $($folder+$date)
 
 # check the answer
 if ($answer -eq '1') {
@@ -101,3 +100,4 @@ ForEach ($extension in $CSV_forextensions) {
     }
 
 Write-Host "All files moved. It might take some time."
+Write-Host "$foldername $enabledext $moveto $DesktopPath"
