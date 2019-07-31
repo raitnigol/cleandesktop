@@ -100,4 +100,8 @@ ForEach ($extension in $CSV_forextensions) {
     }
 
 Write-Host "All files moved. It might take some time."
-Write-Host "$foldername $enabledext $moveto $DesktopPath"
+
+# popup
+
+$wshell = New-Object -ComObject Wscript.Shell
+$wshell.Popup("All files were moved to $folder",0,"All files were moved sucessfully",0x0)
