@@ -12,12 +12,16 @@ Add-Type -AssemblyName System.Windows.Forms
 
 $CLEANDESKTOP                    = New-Object system.Windows.Forms.Form
 $CLEANDESKTOP.ClientSize         = '600,600'
-$CLEANDESKTOP.text               = "CLEANDESKTOP"
-$CLEANDESKTOP.BackColor          = "#d8d8d8"
-$CLEANDESKTOP.TopMost            = $true
+$CLEANDESKTOP.BackColor          = '#d8d8d8'
+$CLEANDESKTOP.text               = 'CLEANDESKTOP'
 $CLEANDESKTOP.StartPosition      = 'CenterScreen'
 $CLEANDESKTOP.FormBorderStyle    = 'Fixed3D'
+$CLEANDESKTOP.WindowState        = 'Normal'
+$CLEANDESKTOP.SizeGripStyle      = 'Hide'
+$CLEANDESKTOP.TopMost            = $true
 $CLEANDESKTOP.MaximizeBox        = $false
+$CLEANDESKTOP.ShowIcon           = $false
+$CLEANDESKTOP.Opacity            = 1
 
 $text_csv                        = New-Object system.Windows.Forms.TextBox
 $text_csv.multiline              = $false
@@ -26,7 +30,7 @@ $text_csv.width                  = 460
 $text_csv.height                 = 20
 $text_csv.Anchor                 = 'top,right,bottom,left'
 $text_csv.location               = New-Object System.Drawing.Point(9,33)
-$text_csv.Font                   = 'Microsoft Sans Serif,10'
+$text_csv.Font                   = 'Verdana,10'
 
 $label_csv                       = New-Object system.Windows.Forms.Label
 $label_csv.text                  = "Path to CSV:"
@@ -60,7 +64,24 @@ $progressbar.Anchor              = 'top,right,left'
 $progressbar.location            = New-Object System.Drawing.Point(10,570)
 $progressbar.visible             = $false
 
-$CLEANDESKTOP.controls.AddRange(@($text_csv,$label_csv,$button_csv,$select_path,$progressbar))
+$label_github                    = New-Object system.Windows.Forms.Label
+$label_github.text               = "github.com/raitnigol"
+$label_github.AutoSize           = $true
+$label_github.width              = 25
+$label_github.height             = 10
+$label_github.location           = New-Object System.Drawing.Point(335,16)
+$label_github.Font               = 'Verdana,10'
+
+$label_extensionscount           = New-Object system.Windows.Forms.Label
+$label_extensionscount.text      = "No extensions found!"
+$label_extensionscount.AutoSize  = $true
+$label_extensionscount.visible   = $false
+$label_extensionscount.width     = 225
+$label_extensionscount.height    = 103
+$label_extensionscount.location  = New-Object System.Drawing.Point(9,570)
+$label_extensionscount.Font      = 'Verdana,10'
+
+$CLEANDESKTOP.controls.AddRange(@($text_csv,$label_csv,$button_csv,$select_path,$progressbar,$label_github,$label_extensionscount))
 
 # Functions
 
@@ -76,12 +97,38 @@ function ButtonClick()
     if ($OpenDialog -eq "OK") 
     {
         $extensionslist = $FileBrowser.FileName
-        $text_csv.Text = $extensionslist
 
-        $Global:csv_filename = $extensionslist
+        $extn = [IO.Path]::GetExtension($extensionslist)
+        if ($extn -eq ".csv")
+        {
+            $text_csv.Text = $extensionslist
+            $Global:csv_filename = $extensionslist
+            
+            $extensions = Import-CSV -Path $csv_filename
+            ForEach ($extension in $extensions)
+            {
+                $extensionscount += 1
+                $label_extensionscount.visible = $true
+
+                if ($progressbar.visible -eq $False)
+                {
+                    $label_extensionscount.location = '9,570'
+                }
+                
+                else
+                {
+                    $label_extensionscount.location = '9,550'
+                }
+                                    
+                $label_extensionscount.text = 'Extensions found: ' + $extensionscount
+            }
+        }
         
-    }
-    
+        else
+        {
+            [System.Windows.MessageBox]::Show('File extension is not .csv','File extension must be .csv','Ok','Error')
+        }             
+    } 
 }
 
 function MoveFiles($initialDirectory) 
@@ -90,29 +137,37 @@ function MoveFiles($initialDirectory)
     $FolderBrowserDialog = New-Object System.Windows.Forms.FolderBrowserDialog
     $FolderBrowserDialog.RootFolder = 'MyComputer'
 
-    If ($initialDirectory) { $FolderBrowserDialog.SelectedPath = $initialDirectory }
-    [void] $FolderBrowserDialog.ShowDialog()
+    if ($initialDirectory) { $FolderBrowserDialog.SelectedPath = $initialDirectory }
 
-    $progressbar.visible = $true
-
-    $Location = $FolderBrowserDialog.SelectedPath
-
-    $extensions = Import-CSV -Path $csv_filename
-
-    ForEach ($extension in $extensions)
+    if ($csv_filename -eq $null)
     {
-        $totalextensions += 1
-        $i = 0
+        [System.Windows.MessageBox]::Show('No extensions found','No CSV file found for extensions','Ok','Error')
+    }
 
-        For ($i=0; $i -lt $totalextensions; $i++) 
+    else
+    {
+        [void] $FolderBrowserDialog.ShowDialog()
+
+        $Location = $FolderBrowserDialog.SelectedPath
+
+        $progressbar.visible = $true
+        $extensions = Import-CSV -Path $csv_filename
+
+        ForEach ($extension in $extensions)
         {
-            $progressbar.value = [int]($i / $totalextensions) * 100
-        }
+            $totalextensions += 1
+            $i = 0
 
-        $enabledext = $($extension.extensions)
-        $move_extension = $("$DesktopPath\*.$enabledext")
+            For ($i=0; $i -lt $totalextensions; $i++) 
+            {
+                $progressbar.value = [int]($i / $totalextensions) * 100
+            }
+
+            $enabledext = $($extension.extensions)
+            $move_extension = $("$DesktopPath\*.$enabledext")
         
-        Move-Item -Path $move_extension -Destination $Location
+            Move-Item -Path $move_extension -Destination $Location
+        }
     }
 
 }
@@ -125,4 +180,5 @@ $button_csv.Add_Click({ButtonClick})
 $CLEANDESKTOP.Controls.Add($select_path)
 $select_path.Add_Click({MoveFiles})
 
-$CLEANDESKTOP.showDialog()
+[void]$CLEANDESKTOP.showDialog()
+$CLEANDESKTOP.Dispose()
