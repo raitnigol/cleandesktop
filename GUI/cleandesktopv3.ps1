@@ -58,6 +58,7 @@ $progressbar.height              = 20
 $progressbar.value               = 0
 $progressbar.Anchor              = 'top,right,left'
 $progressbar.location            = New-Object System.Drawing.Point(10,570)
+$progressbar.visible             = $false
 
 $CLEANDESKTOP.controls.AddRange(@($text_csv,$label_csv,$button_csv,$select_path,$progressbar))
 
@@ -91,6 +92,8 @@ function MoveFiles($initialDirectory)
 
     If ($initialDirectory) { $FolderBrowserDialog.SelectedPath = $initialDirectory }
     [void] $FolderBrowserDialog.ShowDialog()
+
+    $progressbar.visible = $true
 
     $Location = $FolderBrowserDialog.SelectedPath
 
